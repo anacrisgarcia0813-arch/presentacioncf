@@ -9,7 +9,7 @@
     "render:vertical": "remotion render Vertical out/video-vertical.mp4",
     "upgrade": "remotion upgrade",
     "lote": "node scripts/render-lote.mjs",
-    "render:ep1": "remotion render Ep1 out/ep1.mp4 --crf=18"
+    "render:ep1": "remotion render Ep1 out/ep1.mp4 --crf=12 --x264-preset=slow"
   },
   "dependencies": {
     "@fontsource/montserrat": "^5.3.0",

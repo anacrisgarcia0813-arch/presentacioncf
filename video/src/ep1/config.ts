@@ -12,28 +12,27 @@ export type Foco = keyof typeof CARAS;
 // Tomas de cámara virtual. golpe = zoom rápido con whoosh (momento importante).
 export type Toma = { desde: number; zoom: number; foco: Foco; golpe?: boolean };
 
+// Tres niveles: 1.0 general, 1.15 medio, 1.3 golpe. Más de 1.3 se ve borroso (Veo entrega 720p).
 export const TOMAS: Toma[] = [
-  { desde: 0, zoom: 1.3, foco: "H" },
+  { desde: 0, zoom: 1.15, foco: "H" },
   { desde: 1.0, zoom: 1.0, foco: "W" },
-  { desde: 2.55, zoom: 1.38, foco: "H", golpe: true },
-  { desde: 3.95, zoom: 1.2, foco: "I" },
-  { desde: 5.75, zoom: 1.05, foco: "W" },
-  { desde: 7.6, zoom: 1.42, foco: "I", golpe: true },
-  { desde: 10.2, zoom: 1.25, foco: "H" },
-  { desde: 12.05, zoom: 1.6, foco: "I", golpe: true },
+  { desde: 2.55, zoom: 1.3, foco: "H", golpe: true },
+  { desde: 3.95, zoom: 1.15, foco: "I" },
+  { desde: 5.75, zoom: 1.0, foco: "W" },
+  { desde: 7.6, zoom: 1.3, foco: "I", golpe: true },
+  { desde: 10.2, zoom: 1.15, foco: "H" },
+  { desde: 12.05, zoom: 1.3, foco: "I", golpe: true },
   { desde: 12.95, zoom: 1.0, foco: "W" },
   { desde: 14.2, zoom: 1.15, foco: "I" },
-  { desde: 17.75, zoom: 1.65, foco: "I", golpe: true },
-  { desde: 19.1, zoom: 1.3, foco: "H" },
-  { desde: 21.3, zoom: 1.05, foco: "W" },
-  { desde: 23.5, zoom: 1.25, foco: "I" },
+  { desde: 17.75, zoom: 1.3, foco: "I", golpe: true },
+  { desde: 19.1, zoom: 1.15, foco: "H" },
+  { desde: 21.3, zoom: 1.0, foco: "W" },
+  { desde: 23.5, zoom: 1.15, foco: "I" },
   { desde: 27.05, zoom: 1.0, foco: "W" },
-  { desde: 29.9, zoom: 1.45, foco: "I", golpe: true },
-  // 31.3–32.8: zoom cerrado que deja fuera unos subtítulos basura incrustados por Veo.
-  { desde: 31.3, zoom: 1.5, foco: "I" },
-  { desde: 32.8, zoom: 1.2, foco: "I" },
-  { desde: 35.45, zoom: 1.05, foco: "W" },
-  { desde: 38.25, zoom: 1.3, foco: "H" },
+  { desde: 29.9, zoom: 1.3, foco: "I", golpe: true },
+  { desde: 31.3, zoom: 1.15, foco: "I" },
+  { desde: 35.45, zoom: 1.0, foco: "W" },
+  { desde: 38.25, zoom: 1.15, foco: "H" },
   { desde: 40.0, zoom: 1.0, foco: "W" },
 ];
 

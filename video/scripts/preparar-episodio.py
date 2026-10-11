@@ -4,12 +4,15 @@
 - Reescala el vídeo a 1080x1920.
 - Calcula el tiempo de cada palabra para los subtítulos.
 
-Uso: python3 scripts/preparar-episodio.py <video.mp4> <guion.json> <carpeta-salida-public> <data.json>
+Uso: python3 scripts/preparar-episodio.py <video.mp4> <guion.json> <carpeta-salida-public> <data.json> [borrar.json]
 guion.json: [{"s": inicio, "e": fin, "who": "H"|"I", "text": "..."}] con tiempos del vídeo original.
+borrar.json (opcional): [{"desde", "hasta", "x", "y", "w", "h"}] zonas a borrar (texto incrustado por la IA),
+en segundos y píxeles del vídeo original.
 """
 import json, subprocess, sys, re
 
 video, guion_path, out_dir, data_path = sys.argv[1:5]
+borrar = json.load(open(sys.argv[5])) if len(sys.argv) > 5 else []
 PAD_IN, PAD_OUT, MAX_GAP, COLA = 0.12, 0.18, 0.30, 1.4
 
 lineas = json.load(open(guion_path, encoding="utf-8"))
@@ -36,16 +39,20 @@ def remap(t):
         acc += b - a
     return acc
 
-# Corte con micro-fundidos de audio para evitar clics.
-partes, filtros = [], []
+# Limpieza previa: borra texto incrustado y escala una sola vez con lanczos + nitidez adaptativa.
+limpieza = "".join(
+    f"delogo=x={b['x']}:y={b['y']}:w={b['w']}:h={b['h']}:enable='between(t,{b['desde']},{b['hasta']})',"
+    for b in borrar
+)
+partes, filtros = [], [f"[0:v]{limpieza}scale=1080:1920:flags=lanczos,cas=strength=0.5,fps=30,split={len(tramos)}" + "".join(f"[src{k}]" for k in range(len(tramos)))]
 for k, (a, b) in enumerate(tramos):
     d = b - a
-    filtros.append(f"[0:v]trim={a:.3f}:{b:.3f},setpts=PTS-STARTPTS,scale=1080:1920:flags=lanczos,fps=30[v{k}]")
+    filtros.append(f"[src{k}]trim={a:.3f}:{b:.3f},setpts=PTS-STARTPTS[v{k}]")
     filtros.append(f"[0:a]atrim={a:.3f}:{b:.3f},asetpts=PTS-STARTPTS,afade=t=in:d=0.015,afade=t=out:st={max(0, d - 0.02):.3f}:d=0.02[a{k}]")
     partes.append(f"[v{k}][a{k}]")
 filtros.append("".join(partes) + f"concat=n={len(tramos)}:v=1:a=1[v][a]")
 subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-filter_complex", ";".join(filtros),
-                "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "16", "-preset", "medium",
+                "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "10", "-preset", "slow", "-tune", "film",
                 "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", f"{out_dir}/base.mp4"], check=True)
 
 # Palabras con tiempos repartidos según su longitud dentro de cada frase.
