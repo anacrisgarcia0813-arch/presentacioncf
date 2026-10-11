@@ -1,0 +1,22 @@
+[
+  {
+    "archivo": "bienvenida",
+    "composicion": "Principal",
+    "props": {
+      "titulo": "Bienvenidos",
+      "subtitulo": "Presentación CF",
+      "colorFondo": "#0f172a",
+      "colorTexto": "#ffffff"
+    }
+  },
+  {
+    "archivo": "reel-oferta",
+    "composicion": "Vertical",
+    "props": {
+      "titulo": "Oferta especial",
+      "subtitulo": "Solo esta semana",
+      "colorFondo": "#7c3aed",
+      "colorTexto": "#ffffff"
+    }
+  }
+]
