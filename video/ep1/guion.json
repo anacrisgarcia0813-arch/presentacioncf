@@ -1,0 +1,21 @@
+[
+ {"s":1.09,"e":4.81,"who":"H","text":"Infi, ¿tú sabes por qué WhatsApp está bloqueando tantas cuentas de negocios?"},
+ {"s":5.75,"e":7.30,"who":"I","text":"Porque muchos lo usan como no se debe."},
+ {"s":7.81,"e":11.51,"who":"I","text":"Bots piratas, herramientas no oficiales... y Meta lo detecta."},
+ {"s":12.09,"e":13.29,"who":"H","text":"¿Y por lo menos avisan antes?"},
+ {"s":13.75,"e":14.33,"who":"I","text":"Casi nunca."},
+ {"s":15.02,"e":15.89,"who":"I","text":"Un día abren WhatsApp..."},
+ {"s":16.23,"e":19.47,"who":"I","text":"y ese número, con todos sus clientes, cotizaciones y prospectos..."},
+ {"s":19.78,"e":20.86,"who":"I","text":"simplemente dice: bloqueado."},
+ {"s":22.73,"e":24.58,"who":"H","text":"¿Y entonces qué deben hacer los negocios"},
+ {"s":24.91,"e":26.82,"who":"H","text":"y las empresas para no perder su WhatsApp?"},
+ {"s":28.47,"e":31.75,"who":"I","text":"Empezar a migrar a la API de Meta, que es el WhatsApp para empresas oficial."},
+ {"s":32.35,"e":34.87,"who":"I","text":"Con eso, protegemos tu número y lo conectamos a un CRM."},
+ {"s":35.95,"e":36.88,"who":"I","text":"Y además..."},
+ {"s":37.36,"e":41.09,"who":"I","text":"yo puedo responderles a sus clientes al instante, las 24 horas."},
+ {"s":41.51,"e":42.57,"who":"I","text":"Así no pierden ventas..."},
+ {"s":42.89,"e":44.02,"who":"I","text":"y son más competitivos."},
+ {"s":44.73,"e":46.17,"who":"H","text":"Entonces, si no quieren perder su número..."},
+ {"s":46.84,"e":48.02,"who":"H","text":"ya saben: hagan esto desde hoy..."},
+ {"s":48.59,"e":49.40,"who":"H","text":"antes de que les pase."}
+]
