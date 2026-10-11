@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Estructurar Futuro · Video Infibots</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:#060608;font-family:'DM Sans',sans-serif;cursor:none;}
+:root{--or:#E8541A;--nv:#1E2D5A;}
+#cur{position:fixed;width:10px;height:10px;background:var(--or);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+#cur2{position:fixed;width:34px;height:34px;border:2px solid rgba(232,84,26,.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .13s ease,top .13s ease;}
+#stage{position:fixed;inset:0;}
+.scene{position:absolute;inset:0;opacity:0;pointer-events:none;display:flex;}
+.scene.active{opacity:1;pointer-events:all;}
+.dark-scene{background:#060608;}
+.scene-particles{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;}
+.sp{position:absolute;width:2px;height:2px;background:var(--or);border-radius:50%;opacity:0;animation:floatP var(--d,8s) var(--dl,0s) ease-in-out infinite;}
+
+/* AUDIO CONTROLS */
+#audio-bar{position:fixed;bottom:0;left:0;right:0;height:44px;background:rgba(6,6,8,.92);border-top:1px solid rgba(232,84,26,.15);display:flex;align-items:center;gap:12px;padding:0 20px;z-index:400;}
+#pgw{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;}
+#pgb{height:100%;background:var(--or);width:0;border-radius:2px;pointer-events:none;}
+#pbtn{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.6);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+#pbtn:hover{background:rgba(232,84,26,.3);border-color:var(--or);color:#fff;}
+#tlbl{font-size:9px;color:rgba(255,255,255,.25);font-family:'DM Mono',monospace;letter-spacing:1px;flex-shrink:0;}
+.vol-wrap{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.vol-icon{font-size:11px;color:rgba(255,255,255,.3);}
+.vol-slider{-webkit-appearance:none;appearance:none;width:60px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;outline:none;cursor:pointer;}
+.vol-slider::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--or);cursor:pointer;}
+.vol-lbl{font-size:8px;color:rgba(255,255,255,.2);letter-spacing:1px;text-transform:uppercase;}
+
+/* S1 */
+#s1{flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.s1-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,rgba(232,84,26,.1) 0%,transparent 60%);z-index:1;}
+.s1-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(232,84,26,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(232,84,26,.02) 1px,transparent 1px);background-size:55px 55px;z-index:1;}
+.s1-content{position:relative;z-index:2;text-align:center;padding:48px 80px;max-width:860px;}
+.s1-pre{font-size:10px;letter-spacing:6px;color:rgba(232,84,26,.5);text-transform:uppercase;margin-bottom:28px;display:block;opacity:0;}
+.s1-q{font-family:'Playfair Display',serif;font-size:clamp(26px,4vw,54px);font-weight:900;line-height:1.12;color:#fff;}
+.s1-q .word{display:inline-block;opacity:0;}
+.s1-q .hl{color:var(--or);}
+.s1-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:24px;opacity:0;}
+.s1-chip{border:1px solid rgba(232,84,26,.28);padding:8px 18px;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.6);text-transform:uppercase;border-radius:3px;background:rgba(232,84,26,.05);}
+/* S2 */
+#s2{flex-direction:column;align-items:center;justify-content:center;background:var(--nv);overflow:hidden;}
+.s2-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(232,84,26,.18) 0%,transparent 58%);z-index:1;}
+.s2-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;max-width:920px;padding:0 40px;}
+.s2-t{font-family:'Playfair Display',serif;font-size:clamp(20px,3.2vw,42px);color:#fff;text-align:center;margin-bottom:40px;line-height:1.2;opacity:0;}
+.s2-t em{color:var(--or);font-style:normal;}
+.krow{display:flex;gap:0;width:100%;}
+.kbox{flex:1;border-right:1px solid rgba(255,255,255,.06);padding:28px 16px;text-align:center;opacity:0;transform:translateY(30px);}
+.kbox:last-child{border:none;}
+.kv{font-family:'DM Mono',monospace;font-size:clamp(40px,6.5vw,82px);font-weight:500;color:var(--or);line-height:1;display:block;}
+.kl{font-size:clamp(9px,1.1vw,12px);color:rgba(255,255,255,.38);letter-spacing:2px;text-transform:uppercase;margin-top:9px;display:block;line-height:1.4;}
+/* S3 */
+#s3{flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.s3-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(232,84,26,.1) 0%,transparent 55%);z-index:1;}
+.s3-q{font-family:'Playfair Display',serif;font-size:clamp(28px,4.8vw,62px);font-weight:900;color:#fff;text-align:center;line-height:1.1;position:relative;z-index:2;}
+.s3-q em{color:var(--or);font-style:normal;}
+.s3-q .word{display:inline-block;opacity:0;}
+.auto-click{position:relative;z-index:3;margin-top:48px;display:flex;flex-direction:column;align-items:center;opacity:0;}
+.ac-cursor{font-size:28px;color:#fff;line-height:1;filter:drop-shadow(0 0 8px rgba(232,84,26,.4));}
+/* DOLOR */
+.dolor-scene{background:#fff;}
+.dolor-left{flex:0 0 44%;display:flex;flex-direction:column;justify-content:center;padding:48px 44px 48px 56px;position:relative;overflow:hidden;}
+.dolor-right{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden;}
+.dolor-right-light{background:#F4F2EE;}
+.dolor-right-dark{background:#EEF0F8;}
+.d-num{position:absolute;top:12px;left:24px;font-family:'Playfair Display',serif;font-size:clamp(90px,15vw,170px);font-weight:900;color:rgba(232,84,26,.055);line-height:1;z-index:0;}
+.d-tag{font-size:9px;letter-spacing:5px;color:var(--or);text-transform:uppercase;font-weight:600;margin-bottom:14px;position:relative;z-index:1;opacity:0;transform:translateX(-16px);}
+.d-q{font-family:'Playfair Display',serif;font-size:clamp(20px,2.8vw,36px);font-weight:900;line-height:1.15;margin-bottom:14px;color:#1A1814;position:relative;z-index:1;}
+.d-q .word{display:inline-block;opacity:0;}
+.d-body{font-size:clamp(13px,1.5vw,15px);color:#5A5750;line-height:1.88;position:relative;z-index:1;opacity:0;}
+.d-body strong{color:#1A1814;}
+.d-alert{margin-top:13px;font-size:12px;color:#B83030;font-weight:600;padding:9px 13px;background:#FCEAEA;border-radius:7px;border-left:3px solid #B83030;position:relative;z-index:1;opacity:0;}
+.d-screen{width:100%;max-width:580px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.13);border:1.5px solid #E5E2DC;opacity:0;transform:scale(.91) translateX(30px);}
+.d-screen .dsb{background:var(--nv);padding:9px 13px;display:flex;align-items:center;gap:8px;}
+.dsd{display:flex;gap:5px;}.dsdot{width:7px;height:7px;border-radius:50%;}
+.dst{font-size:8px;color:rgba(255,255,255,.55);font-weight:500;flex:1;text-align:center;letter-spacing:.6px;}
+.d-screen img{width:100%;display:block;}
+/* S7 */
+#s7{flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.s7-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 42%,rgba(232,84,26,.17) 0%,transparent 54%);z-index:1;}
+.s7-lines{position:absolute;inset:0;z-index:1;overflow:hidden;}
+.s7-ln{position:absolute;height:1px;width:100%;background:linear-gradient(90deg,transparent,rgba(232,84,26,.18),transparent);animation:lsweep var(--d,5s) var(--dl,0s) ease-in-out infinite;top:var(--t,50%);}
+.s7-c{position:relative;z-index:2;text-align:center;padding:40px 60px;max-width:860px;}
+.s7-tag{font-size:10px;letter-spacing:5px;color:rgba(232,84,26,.55);text-transform:uppercase;display:block;margin-bottom:18px;opacity:0;}
+.s7-t{font-family:'Playfair Display',serif;font-size:clamp(34px,6vw,78px);font-weight:900;color:#fff;line-height:1.05;margin-bottom:14px;}
+.s7-t em{color:var(--or);font-style:normal;}
+.s7-t .word{display:inline-block;opacity:0;}
+.s7-sub{font-size:clamp(13px,1.8vw,18px);color:rgba(255,255,255,.48);line-height:1.75;max-width:580px;margin:0 auto 26px;opacity:0;}
+.s7-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;opacity:0;}
+.s7-chip{background:rgba(232,84,26,.09);border:1px solid rgba(232,84,26,.28);padding:9px 20px;font-size:10px;letter-spacing:2px;color:var(--or);text-transform:uppercase;border-radius:4px;}
+/* ROLES */
+.scene[id^="sr"]{background:#060608;}
+.role-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 28% 50%,rgba(232,84,26,.08) 0%,transparent 55%);z-index:1;pointer-events:none;}
+.role-left{flex:0 0 46%;display:flex;flex-direction:column;justify-content:center;padding:44px 40px 44px 64px;position:relative;z-index:2;}
+.role-right{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(255,255,255,.02);position:relative;z-index:2;overflow:hidden;}
+.role-tag{font-size:9px;letter-spacing:5px;color:var(--or);text-transform:uppercase;font-weight:600;margin-bottom:12px;opacity:0;transform:translateY(-10px);}
+.role-bigtitle{font-family:'Playfair Display',serif;font-size:clamp(32px,5vw,64px);font-weight:900;color:#fff;line-height:1.04;margin-bottom:12px;}
+.role-bigtitle .word{display:inline-block;opacity:0;}
+.role-sub{font-size:clamp(13px,1.6vw,17px);color:rgba(255,255,255,.45);margin-bottom:22px;opacity:0;line-height:1.55;border-left:3px solid var(--or);padding-left:12px;}
+.role-pts{display:flex;flex-direction:column;gap:10px;}
+.rp-item{display:flex;align-items:flex-start;gap:10px;font-size:clamp(13px,1.5vw,16px);color:rgba(255,255,255,.7);line-height:1.55;opacity:0;transform:translateX(-14px);}
+.rp-arr{color:var(--or);font-weight:700;flex-shrink:0;margin-top:2px;font-size:15px;}
+.role-screen{width:100%;max-width:600px;background:#fff;border-radius:13px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.45);border:1.5px solid rgba(255,255,255,.08);opacity:0;transform:scale(.88) translateX(34px);}
+.rs-bar{background:var(--nv);padding:9px 13px;display:flex;align-items:center;gap:8px;}
+.rs-dots{display:flex;gap:5px;}.rs-dot{width:7px;height:7px;border-radius:50%;}
+.rs-ttl{font-size:8px;color:rgba(255,255,255,.5);font-weight:500;flex:1;text-align:center;letter-spacing:.7px;}
+.role-screen img{width:100%;display:block;}
+/* S8 */
+#s8{flex-direction:column;align-items:center;justify-content:center;background:var(--nv);overflow:hidden;}
+.s8-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(232,84,26,.2) 0%,transparent 58%);z-index:1;}
+.s8-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;padding:0 40px;width:100%;max-width:860px;}
+.s8-t{font-family:'Playfair Display',serif;font-size:clamp(22px,3.5vw,46px);color:#fff;text-align:center;margin-bottom:36px;line-height:1.15;opacity:0;}
+.s8-t em{color:var(--or);font-style:normal;}
+.s8-words{display:flex;flex-direction:column;gap:12px;width:100%;max-width:720px;}
+.s8-word{opacity:0;transform:translateY(24px);padding:16px 24px;border-left:4px solid var(--or);background:rgba(255,255,255,.04);border-radius:0 8px 8px 0;display:flex;align-items:center;gap:16px;}
+.s8-icon{font-size:22px;flex-shrink:0;}
+.s8-wt{font-family:'Playfair Display',serif;font-size:clamp(17px,2.3vw,26px);color:#fff;font-weight:700;text-align:left;}
+.s8-ws{font-size:clamp(11px,1.2vw,13px);color:rgba(255,255,255,.38);text-align:left;margin-top:2px;}
+/* S9 */
+#s9{flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+.s9-glow{position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(30,45,90,.55) 0%,transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(232,84,26,.2) 0%,transparent 50%);z-index:1;}
+.s9-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(232,84,26,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(232,84,26,.018) 1px,transparent 1px);background-size:50px 50px;z-index:1;}
+.s9-c{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px;}
+.s9-tag{font-size:10px;letter-spacing:5px;color:rgba(232,84,26,.55);text-transform:uppercase;display:block;margin-bottom:16px;opacity:0;}
+.s9-t{font-family:'Playfair Display',serif;font-size:clamp(26px,4.5vw,58px);color:#fff;font-weight:900;line-height:1.05;margin-bottom:10px;}
+.s9-t em{color:var(--or);font-style:normal;}
+.s9-t .word{display:inline-block;opacity:0;}
+.s9-sub{font-size:clamp(13px,1.7vw,17px);color:rgba(255,255,255,.42);margin-bottom:24px;opacity:0;max-width:440px;line-height:1.65;}
+.s9-qr{background:#fff;padding:15px;border-radius:14px;opacity:0;transform:scale(.75);}
+.s9-qr img{width:175px;height:175px;display:block;}
+.s9-note{font-size:9px;color:rgba(255,255,255,.22);letter-spacing:2px;text-transform:uppercase;margin-top:12px;opacity:0;}
+.s9-v{margin-top:18px;background:rgba(232,84,26,.07);border:1px solid rgba(232,84,26,.2);padding:14px 26px;border-radius:8px;max-width:500px;opacity:0;}
+.s9-v p{font-size:clamp(12px,1.4vw,15px);color:rgba(255,255,255,.65);line-height:1.75;}
+.s9-v strong{color:#fff;}
+
+@keyframes floatP{0%{transform:translateY(105vh);opacity:0}8%{opacity:.5}88%{opacity:.25}100%{transform:translateY(-8vh);opacity:0}}
+@keyframes lsweep{0%,100%{opacity:0;transform:scaleX(0)}20%{opacity:1;transform:scaleX(1)}80%{opacity:1}}
+@keyframes wDrop{0%{opacity:0;transform:translateY(-28px) rotate(-4deg)}60%{transform:translateY(4px) rotate(.5deg)}100%{opacity:1;transform:none}}
+@keyframes bigWDrop{0%{opacity:0;transform:translateY(-44px) scale(.82) rotate(-3deg)}60%{transform:translateY(6px) scale(1.04) rotate(.3deg)}100%{opacity:1;transform:none}}
+@keyframes kpop{0%{opacity:0;transform:translateY(30px) scale(.8)}65%{transform:translateY(-4px) scale(1.05)}100%{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes imgRev{from{opacity:0;transform:scale(.88) translateX(30px)}to{opacity:1;transform:none}}
+@keyframes scIn{0%{opacity:0;transform:scale(.4)}65%{transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+@keyframes qrGlow{0%,100%{box-shadow:0 0 20px rgba(232,84,26,.3)}50%{box-shadow:0 0 60px rgba(232,84,26,.65),0 0 120px rgba(232,84,26,.2)}}
+@keyframes ripple{from{transform:translate(-50%,-50%) scale(0);opacity:1}to{transform:translate(-50%,-50%) scale(4);opacity:0}}
+@keyframes curClick{0%{transform:scale(1)}40%{transform:scale(.75)}100%{transform:scale(1)}}
+@keyframes chipIn{from{opacity:0;transform:translateY(12px) scale(.92)}to{opacity:1;transform:none}}
+@keyframes wordPop{0%{opacity:0;transform:translateY(22px)}65%{transform:translateY(-3px)}100%{opacity:1;transform:none}}
+@media(max-width:700px){
+  .dolor-left,.role-left{flex:0 0 100%;padding:24px;}
+  .dolor-right,.role-right{display:none;}
+  .dolor-scene,.scene[id^="sr"]{flex-direction:column;}
+  .krow{flex-wrap:wrap;}.kbox{flex:1 1 40%;}
+}
+</style>
+</head>
+<body>
+<div id="cur"></div><div id="cur2"></div>
+
+<!-- AUDIO ELEMENTS -->
+<!-- Música en loop con Web Audio API para fade/loop perfecto -->
+<audio id="audVoz" preload="auto">
+  <source src="assets/voz.mp3" type="audio/mpeg"/>
+</audio>
+<audio id="audMusica" loop preload="auto">
+  <source src="assets/musica.mp3" type="audio/mpeg"/>
+</audio>
+
+<div id="stage">
+<!-- S1 -->
+<div class="scene dark-scene" id="s1">
+  <div class="scene-particles" id="p1"></div>
+  <div class="s1-glow"></div><div class="s1-grid"></div>
+  <div class="s1-content">
+    <span class="s1-pre" id="s1pre">Infibots · Propuesta 2026</span>
+    <div class="s1-q" id="s1q">¿Y si te dijera que hoy puedes ver toda la operación de Estructurar Futuro desde cualquier lugar del mundo en tiempo real... <span class="hl">me creerías?</span></div>
+    <div class="s1-chips" id="s1chips">
+      <div class="s1-chip">Ocupancia en vivo</div><div class="s1-chip">Cartera al día</div><div class="s1-chip">Avance de obra</div><div class="s1-chip">Informes automáticos</div>
+    </div>
+  </div>
+</div>
+<!-- S2 -->
+<div class="scene" id="s2">
+  <div class="scene-particles" id="p2"></div>
+  <div class="s2-glow"></div>
+  <div class="s2-inner">
+    <div class="s2-t" id="s2t">¿Cuál será el impacto para Estructurar Futuro<br>si lograrás tener <em>ese control?</em></div>
+    <div class="krow">
+      <div class="kbox" id="k1"><span class="kv">-70%</span><span class="kl">Reducción de<br>operatividad manual</span></div>
+      <div class="kbox" id="k2"><span class="kv">-90%</span><span class="kl">Menos errores<br>en reportes</span></div>
+      <div class="kbox" id="k3"><span class="kv">24/7</span><span class="kl">Visibilidad<br>total</span></div>
+      <div class="kbox" id="k4"><span class="kv">0</span><span class="kl">Reportes<br>manuales</span></div>
+    </div>
+  </div>
+</div>
+<!-- S3 -->
+<div class="scene dark-scene" id="s3">
+  <div class="scene-particles" id="p3"></div>
+  <div class="s3-glow"></div>
+  <div class="s3-q" id="s3q">¿Qué problemas vamos<br>a <em>solucionar?</em></div>
+  <div class="auto-click" id="aclick"><div class="ac-cursor" id="accur">🖱</div></div>
+</div>
+<!-- S4 -->
+<div class="scene dolor-scene" id="s4">
+  <div class="dolor-left">
+    <div class="d-num">01</div>
+    <div class="d-tag" id="d1t">Ocupancia en vivo</div>
+    <div class="d-q" id="d1q">¿Sabes cuántos locales están ocupados ahora mismo?</div>
+    <div class="d-body" id="d1b">Para saberlo tienes que llamar a alguien que revise un Excel. <strong>Cada día sin esta información es un local vacante que nadie está cerrando.</strong></div>
+    <div class="d-alert" id="d1a">⚠ Local 8B — 90 días vacante · $8.6M/mes sin generar</div>
+  </div>
+  <div class="dolor-right dolor-right-light">
+    <div class="d-screen" id="d1s"><div class="dsb"><div class="dsd"><div class="dsdot" style="background:#ff5f57"></div><div class="dsdot" style="background:#febc2e"></div><div class="dsdot" style="background:#28c840"></div></div><div class="dst">CEO · DASHBOARD GENERAL</div></div><img src="assets/img01.png" alt=""/></div>
+  </div>
+</div>
+<!-- S5 -->
+<div class="scene dolor-scene" id="s5">
+  <div class="dolor-left" style="background:#fafafa;">
+    <div class="d-num">02</div>
+    <div class="d-tag" id="d2t">Cartera y mora</div>
+    <div class="d-q" id="d2q">¿Sabes cuánto debe cada arrendatario y cuánto lleva en mora?</div>
+    <div class="d-body" id="d2b">Nadie tiene un sistema que vea crecer la mora. Sin automatización, <strong>el equipo reacciona tarde, los cobros son manuales y los duplicados pasan desapercibidos.</strong></div>
+  </div>
+  <div class="dolor-right dolor-right-dark">
+    <div class="d-screen" id="d2s"><div class="dsb"><div class="dsd"><div class="dsdot" style="background:#ff5f57"></div><div class="dsdot" style="background:#febc2e"></div><div class="dsdot" style="background:#28c840"></div></div><div class="dst">DIRECTOR FINANCIERO · CONTROL</div></div><img src="assets/img02.png" alt=""/></div>
+  </div>
+</div>
+<!-- S6 -->
+<div class="scene dolor-scene" id="s6">
+  <div class="dolor-left">
+    <div class="d-num">03</div>
+    <div class="d-tag" id="d3t">Seguimiento de obra</div>
+    <div class="d-q" id="d3q">¿Proyectos que se retrasan por perder la sincronía?</div>
+    <div class="d-body" id="d3b">Cuando la coordinación con el director de obra falla, los datos generan demoras. <strong>Cuando el CEO se entera, ya se ha perdido tiempo y dinero.</strong></div>
+  </div>
+  <div class="dolor-right dolor-right-light">
+    <div class="d-screen" id="d3s"><div class="dsb"><div class="dsd"><div class="dsdot" style="background:#ff5f57"></div><div class="dsdot" style="background:#febc2e"></div><div class="dsdot" style="background:#28c840"></div></div><div class="dst">DIR. DE OBRA · GANTT EN VIVO</div></div><img src="assets/img03.png" alt=""/></div>
+  </div>
+</div>
+<!-- S7 -->
+<div class="scene dark-scene" id="s7">
+  <div class="scene-particles" id="p7"></div>
+  <div class="s7-glow"></div>
+  <div class="s7-lines">
+    <div class="s7-ln" style="--t:18%;--d:6s;--dl:0s"></div>
+    <div class="s7-ln" style="--t:50%;--d:5s;--dl:1.4s"></div>
+    <div class="s7-ln" style="--t:80%;--d:7s;--dl:.7s"></div>
+  </div>
+  <div class="s7-c">
+    <span class="s7-tag" id="s7tag">Nuestra solución</span>
+    <div class="s7-t" id="s7t">Todo en una<br><em>sola aplicación.</em></div>
+    <div class="s7-sub" id="s7sub">Sistema centralizado que coordina la inmobiliaria, la constructora y todo el equipo.</div>
+    <div class="s7-chips" id="s7chips">
+      <div class="s7-chip">Inmobiliaria</div><div class="s7-chip">Constructora</div><div class="s7-chip">Equipo</div><div class="s7-chip">Inversionistas</div><div class="s7-chip">Interventor</div><div class="s7-chip">Cobranza</div>
+    </div>
+  </div>
+</div>
+
+<div class="scene dark-scene" id="sr0">
+  <div class="scene-particles" id="rp0"></div>
+  <div class="role-glow" style="--rc:#E8541A"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag0">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt0">CEO</div>
+    <div class="role-sub" id="rsub0">Vista 360° — Todo el negocio en una pantalla</div>
+    <div class="role-pts" id="rpts0"><div class="rp-item"><span class="rp-arr">→</span><span>Dashboard con todos los KPIs en tiempo real</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Ocupancia, cartera, obras e inversionistas</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Alertas automáticas antes de que haya problemas</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Toma decisiones con cifras exactas desde donde esté</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr0">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · CEO</div>
+      </div>
+      <img src="assets/img01.png" alt="CEO"/>
+    </div>
+  </div>
+</div>
+<div class="scene dark-scene" id="sr1">
+  <div class="scene-particles" id="rp1"></div>
+  <div class="role-glow" style="--rc:#1E2D5A"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag1">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt1">Director Financiero</div>
+    <div class="role-sub" id="rsub1">Control total de cartera, mora y obras</div>
+    <div class="role-pts" id="rpts1"><div class="rp-item"><span class="rp-arr">→</span><span>Distribución de cartera y recaudo mensual</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Mora por etapa: preventiva hasta jurídico</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Control financiero de obra y presupuesto</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Proyecciones de ingreso en tiempo real</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr1">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · DIRECTOR FINANCIERO</div>
+      </div>
+      <img src="assets/img02.png" alt="Director Financiero"/>
+    </div>
+  </div>
+</div>
+<div class="scene dark-scene" id="sr2">
+  <div class="scene-particles" id="rp2"></div>
+  <div class="role-glow" style="--rc:#3B6D11"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag2">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt2">Director de Obra</div>
+    <div class="role-sub" id="rsub2">Gantt en vivo — Compromiso vs ejecución real</div>
+    <div class="role-pts" id="rpts2"><div class="rp-item"><span class="rp-arr">→</span><span>Avance por etapa con variación en días</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Carga reportes, fotos y facturas directamente</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Reportes automáticos por correo a dirección</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Alertas de retraso antes de que escalen</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr2">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · DIRECTOR DE OBRA</div>
+      </div>
+      <img src="assets/img03.png" alt="Director de Obra"/>
+    </div>
+  </div>
+</div>
+<div class="scene dark-scene" id="sr3">
+  <div class="scene-particles" id="rp3"></div>
+  <div class="role-glow" style="--rc:#8A5C00"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag3">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt3">Equipo Comercial</div>
+    <div class="role-sub" id="rsub3">CRM + pipeline de prospectos en Kanban</div>
+    <div class="role-pts" id="rpts3"><div class="rp-item"><span class="rp-arr">→</span><span>Prospectos por etapa: nuevo → cierre</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Locales vacantes con días de vacancia</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Asigna locales y programa visitas</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Métricas de gestión por agente</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr3">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · EQUIPO COMERCIAL</div>
+      </div>
+      <img src="assets/img04.png" alt="Equipo Comercial"/>
+    </div>
+  </div>
+</div>
+<div class="scene dark-scene" id="sr4">
+  <div class="scene-particles" id="rp4"></div>
+  <div class="role-glow" style="--rc:#B83030"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag4">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt4">Área de Cobranza</div>
+    <div class="role-sub" id="rsub4">Mora gestionada sola. Todos los días.</div>
+    <div class="role-pts" id="rpts4"><div class="rp-item"><span class="rp-arr">→</span><span>Lista diaria automática de gestiones</span></div><div class="rp-item"><span class="rp-arr">→</span><span>WhatsApp, email y visita desde la plataforma</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Registra pagos y adjunta comprobantes</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Importa carteras desde Excel o CSV</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr4">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · ÁREA DE COBRANZA</div>
+      </div>
+      <img src="assets/img05.png" alt="Área de Cobranza"/>
+    </div>
+  </div>
+</div>
+<div class="scene dark-scene" id="sr5">
+  <div class="scene-particles" id="rp5"></div>
+  <div class="role-glow" style="--rc:#185FA5"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag5">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt5">Interventor</div>
+    <div class="role-sub" id="rsub5">Auditoría técnica — Plan vs realidad</div>
+    <div class="role-pts" id="rpts5"><div class="rp-item"><span class="rp-arr">→</span><span>Comparativo real vs plan por proyecto</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Emite informes de auditoría técnica</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Alertas críticas directas al CEO</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Adjunta soportes fotográficos y documentos</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr5">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · INTERVENTOR</div>
+      </div>
+      <img src="assets/img06.png" alt="Interventor"/>
+    </div>
+  </div>
+</div>
+<div class="scene dark-scene" id="sr6">
+  <div class="scene-particles" id="rp6"></div>
+  <div class="role-glow" style="--rc:#1E2D5A"></div>
+  <div class="role-left">
+    <div class="role-tag" id="rtag6">Panel de acceso</div>
+    <div class="role-bigtitle" id="rbt6">Inversionista</div>
+    <div class="role-sub" id="rsub6">Su dinero, visible. Su confianza, ganada.</div>
+    <div class="role-pts" id="rpts6"><div class="rp-item"><span class="rp-arr">→</span><span>Capital invertido, participación y ROI actual</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Evolución histórica de su inversión</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Avance de los proyectos donde participa</span></div><div class="rp-item"><span class="rp-arr">→</span><span>Descarga reportes PDF automáticamente</span></div></div>
+  </div>
+  <div class="role-right">
+    <div class="role-screen" id="rscr6">
+      <div class="rs-bar">
+        <div class="rs-dots"><div class="rs-dot" style="background:#ff5f57"></div><div class="rs-dot" style="background:#febc2e"></div><div class="rs-dot" style="background:#28c840"></div></div>
+        <div class="rs-ttl">ESTRUCTURAR FUTURO · INVERSIONISTA</div>
+      </div>
+      <img src="assets/img07.png" alt="Inversionista"/>
+    </div>
+  </div>
+</div>
+<!-- S8 -->
+<div class="scene" id="s8">
+  <div class="scene-particles" id="p8"></div>
+  <div class="s8-glow"></div>
+  <div class="s8-inner">
+    <div class="s8-t" id="s8t">¿Cuál será la transformación<br>de <em>Estructurar Futuro?</em></div>
+    <div class="s8-words" id="s8words">
+      <div class="s8-word" id="sw1"><div class="s8-icon">🏆</div><div><div class="s8-wt">Competitividad</div><div class="s8-ws">Únicos en la región — operando con tecnología de nivel enterprise</div></div></div>
+      <div class="s8-word" id="sw2"><div class="s8-icon">📈</div><div><div class="s8-wt">Crecimiento exponencial</div><div class="s8-ws">Más velocidad, menos errores, decisiones con datos exactos</div></div></div>
+      <div class="s8-word" id="sw3"><div class="s8-icon">🎯</div><div><div class="s8-wt">Control total</div><div class="s8-ws">Todo el negocio visible en tiempo real desde cualquier lugar</div></div></div>
+      <div class="s8-word" id="sw4"><div class="s8-icon">🤝</div><div><div class="s8-wt">Seguridad para sus inversionistas</div><div class="s8-ws">Portal 24/7 con ROI en tiempo real — la confianza que atrae nuevo capital</div></div></div>
+    </div>
+  </div>
+</div>
+<!-- S9 -->
+<div class="scene dark-scene" id="s9">
+  <div class="scene-particles" id="p9"></div>
+  <div class="s9-glow"></div><div class="s9-grid"></div>
+  <div class="s9-c">
+    <span class="s9-tag" id="s9tag">Ahora si quieres verlo en vivo</span>
+    <div class="s9-t" id="s9t">Escanea y explora<br>la plataforma <em>en vivo.</em></div>
+    <div class="s9-sub" id="s9sub">Accede desde tu celular. Sin instalar nada.</div>
+    <div class="s9-qr" id="s9qr"><img src="assets/img08.png" alt="QR"/></div>
+    <div class="s9-note" id="s9note">Cualquier dispositivo · Sin instalar nada</div>
+    <div class="s9-v" id="s9v"><p>No vendemos software. <strong>Creamos sistemas SaaS a la medida de grandes empresas para transformar su forma de trabajar y crecer.</strong></p></div>
+  </div>
+</div>
+</div>
+
+<!-- BARRA DE CONTROLES -->
+<div id="audio-bar">
+  <button id="pbtn" onclick="togglePause()">⏸</button>
+  <div id="pgw" onclick="seekTo(event)"><div id="pgb"></div></div>
+  <span id="tlbl">0:00 / 2:53</span>
+  <div class="vol-wrap">
+    <span class="vol-lbl">VOZ</span>
+    <input type="range" class="vol-slider" min="0" max="1" step="0.05" value="1" oninput="document.getElementById('audVoz').volume=this.value"/>
+  </div>
+  <div class="vol-wrap">
+    <span class="vol-lbl">MÚSICA</span>
+    <input type="range" class="vol-slider" min="0" max="1" step="0.05" value="0.22" oninput="document.getElementById('audMusica').volume=this.value"/>
+  </div>
+</div>
+
+<script>
+// CURSOR
+var cd=document.getElementById('cur'),cr=document.getElementById('cur2'),mx=window.innerWidth/2,my=window.innerHeight/2,rx=mx,ry=my;
+document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;cd.style.left=mx+'px';cd.style.top=my+'px';});
+(function loop(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;cr.style.left=rx+'px';cr.style.top=ry+'px';requestAnimationFrame(loop);})();
+
+// AUDIO
+var voz=document.getElementById('audVoz');
+var mus=document.getElementById('audMusica');
+mus.volume=0.22;
+voz.volume=1.0;
+
+// PARTICLES
+function initP(id){
+  var c=document.getElementById(id);if(!c||c.dataset.init)return;c.dataset.init=1;
+  for(var i=0;i<22;i++){var p=document.createElement('div');p.className='sp';p.style.cssText='left:'+(Math.random()*100)+'%;--d:'+(6+Math.random()*9)+'s;--dl:'+(Math.random()*7)+'s;';c.appendChild(p);}
+}
+
+// HELPERS
+function q(id){return document.getElementById(id);}
+function fa(id,dl,dur){var el=q(id);if(!el)return;setTimeout(function(){el.style.animation='fadeIn '+(dur||420)+'ms ease both';},dl||0);}
+function si(id,dl,dur){var el=q(id);if(!el)return;setTimeout(function(){el.style.animation='slideIn '+(dur||460)+'ms ease both';},dl||0);}
+function su(id,dl,dur){var el=q(id);if(!el)return;setTimeout(function(){el.style.animation='slideUp '+(dur||480)+'ms ease both';},dl||0);}
+function kp(id,dl){var el=q(id);if(!el)return;setTimeout(function(){el.style.animation='kpop .65s cubic-bezier(.34,1.56,.64,1) both';},dl||0);}
+function imgIn(id,dl){var el=q(id);if(!el)return;setTimeout(function(){el.style.animation='imgRev .72s cubic-bezier(.25,.46,.45,.94) both';},dl||0);}
+function chipA(id,dl){
+  var el=q(id);if(!el)return;
+  setTimeout(function(){el.style.opacity='1';Array.from(el.children).forEach(function(c,i){c.style.animation='chipIn .48s '+(i*.1)+'s ease both';});},dl||0);
+}
+function animW(id,dl,stagger,big){
+  var el=q(id);if(!el)return;
+  var raw=el.innerHTML,result='',wcount=0;
+  raw.split(/(<[^>]+>|\s+)/).forEach(function(tok){
+    if(/^</.test(tok)){result+=tok;}
+    else if(/^\s+$/.test(tok)){result+=' ';}
+    else if(tok){
+      var d=(dl/1000+wcount*(stagger||.07));
+      var an=big?'bigWDrop':'wDrop';
+      result+='<span class="word" style="animation:'+an+' .55s '+d+'s cubic-bezier(.34,1.56,.64,1) both">'+tok+'</span> ';
+      wcount++;
+    }
+  });
+  el.innerHTML=result;
+}
+function animBig(id,dl){animW(id,dl,.09,true);}
+function animPts(id,dl){
+  var el=q(id);if(!el)return;
+  Array.from(el.querySelectorAll('.rp-item')).forEach(function(item,i){
+    setTimeout(function(){item.style.animation='slideIn .46s ease both';},dl+i*120);
+  });
+}
+function triggerAutoClick(){
+  var el=q('accur');if(!el)return;
+  el.style.animation='curClick .4s ease both';
+  var parent=q('aclick');if(!parent)return;
+  var r=document.createElement('div');
+  r.style.cssText='position:absolute;width:50px;height:50px;border-radius:50%;border:2.5px solid var(--or);top:14px;left:50%;transform:translate(-50%,-50%) scale(0);opacity:1;animation:ripple .6s ease forwards;pointer-events:none;';
+  parent.appendChild(r);
+  setTimeout(function(){r.remove();},650);
+}
+
+var SA={
+  s1:function(){initP('p1');fa('s1pre',0,360);animW('s1q',360,.065);chipA('s1chips',2700);},
+  s2:function(){initP('p2');su('s2t',0,460);kp('k1',580);kp('k2',880);kp('k3',1180);kp('k4',1480);},
+  s3:function(){initP('p3');animW('s3q',80,.078);fa('aclick',1600,420);setTimeout(triggerAutoClick,3900);},
+  s4:function(){si('d1t',0,360);animW('d1q',160,.085);fa('d1b',820,420);fa('d1a',1280,360);imgIn('d1s',420);},
+  s5:function(){si('d2t',0,360);animW('d2q',160,.085);fa('d2b',820,420);imgIn('d2s',420);},
+  s6:function(){si('d3t',0,360);animW('d3q',160,.085);fa('d3b',820,420);imgIn('d3s',420);},
+  s7:function(){initP('p7');fa('s7tag',0,360);animW('s7t',260,.08);fa('s7sub',820,420);chipA('s7chips',1460);},
+  
+  sr0:function(){
+    initP('rp0');
+    si('rtag0',0,360);
+    animBig('rbt0',200);
+    fa('rsub0',560,400);
+    animPts('rpts0',720);
+    imgIn('rscr0',340);
+  },
+  sr1:function(){
+    initP('rp1');
+    si('rtag1',0,360);
+    animBig('rbt1',200);
+    fa('rsub1',560,400);
+    animPts('rpts1',720);
+    imgIn('rscr1',340);
+  },
+  sr2:function(){
+    initP('rp2');
+    si('rtag2',0,360);
+    animBig('rbt2',200);
+    fa('rsub2',560,400);
+    animPts('rpts2',720);
+    imgIn('rscr2',340);
+  },
+  sr3:function(){
+    initP('rp3');
+    si('rtag3',0,360);
+    animBig('rbt3',200);
+    fa('rsub3',560,400);
+    animPts('rpts3',720);
+    imgIn('rscr3',340);
+  },
+  sr4:function(){
+    initP('rp4');
+    si('rtag4',0,360);
+    animBig('rbt4',200);
+    fa('rsub4',560,400);
+    animPts('rpts4',720);
+    imgIn('rscr4',340);
+  },
+  sr5:function(){
+    initP('rp5');
+    si('rtag5',0,360);
+    animBig('rbt5',200);
+    fa('rsub5',560,400);
+    animPts('rpts5',720);
+    imgIn('rscr5',340);
+  },
+  sr6:function(){
+    initP('rp6');
+    si('rtag6',0,360);
+    animBig('rbt6',200);
+    fa('rsub6',560,400);
+    animPts('rpts6',720);
+    imgIn('rscr6',340);
+  },
+  s8:function(){
+    initP('p8');
+    animW('s8t',0,.08);
+    [q('sw1'),q('sw2'),q('sw3'),q('sw4')].forEach(function(w,i){
+      if(w)setTimeout(function(){w.style.animation='wordPop .6s cubic-bezier(.34,1.56,.64,1) both';},1800+i*320);
+    });
+  },
+  s9:function(){
+    initP('p9');fa('s9tag',0,360);animW('s9t',260,.072);fa('s9sub',820,380);
+    setTimeout(function(){
+      var qr=q('s9qr');
+      if(qr){qr.style.animation='scIn .7s cubic-bezier(.34,1.56,.64,1) both';
+      setTimeout(function(){qr.style.animation='scIn .7s cubic-bezier(.34,1.56,.64,1) both, qrGlow 2.2s .8s ease-in-out infinite';},750);}
+    },1260);
+    fa('s9note',1860,360);fa('s9v',2340,420);
+  }
+};
+
+// TIMELINE
+var SCENES=[{id:"s1",dur:11000},{id:"s2",dur:9000},{id:"s3",dur:6000},{id:"s4",dur:12000},{id:"s5",dur:12000},{id:"s6",dur:12000},{id:"s7",dur:9000},{id:"sr0",dur:10000},{id:"sr1",dur:10000},{id:"sr2",dur:10000},{id:"sr3",dur:10000},{id:"sr4",dur:10000},{id:"sr5",dur:10000},{id:"sr6",dur:10000},{id:"s8",dur:12000},{id:"s9",dur:20000}];
+var TOTAL=173000;
+var cur=-1,paused=false,startT=null,pausedAt=0,rafId=null;
+
+function showScene(idx){
+  if(idx===cur)return;
+  if(cur>=0){var old=q(SCENES[cur].id);if(old)old.classList.remove('active');}
+  cur=idx;var sc=q(SCENES[idx].id);
+  if(sc){sc.classList.add('active');void sc.offsetWidth;}
+  if(SA[SCENES[idx].id])SA[SCENES[idx].id]();
+}
+
+function tick(now){
+  if(paused)return;
+  if(!startT)startT=now;
+  var elapsed=now-startT;
+  if(elapsed>TOTAL)elapsed=TOTAL;
+  q('pgb').style.width=((elapsed/TOTAL)*100)+'%';
+  var s=Math.floor(elapsed/1000),m=Math.floor(s/60),ss=s%60;
+  q('tlbl').textContent=m+':'+(ss<10?'0':'')+ss+' / 2:53';
+  var acc=0;
+  for(var i=0;i<SCENES.length;i++){acc+=SCENES[i].dur;if(elapsed<acc){showScene(i);break;}}
+  rafId=requestAnimationFrame(tick);
+}
+
+function togglePause(){
+  paused=!paused;
+  q('pbtn').innerHTML=paused?'&#9654;':'&#9646;&#9646;';
+  if(!paused){
+    startT=performance.now()-pausedAt;
+    voz.play();mus.play();
+    rafId=requestAnimationFrame(tick);
+  }else{
+    pausedAt=performance.now()-startT;
+    voz.pause();mus.pause();
+    cancelAnimationFrame(rafId);
+  }
+}
+
+function seekTo(e){
+  var bar=q('pgw');
+  var pct=e.offsetX/bar.offsetWidth;
+  var newTime=pct*TOTAL;
+  startT=performance.now()-newTime;
+  pausedAt=newTime;
+  voz.currentTime=(newTime/1000);
+}
+
+document.addEventListener('keydown',function(e){if(e.key===' ')togglePause();});
+
+// START — click to begin (needed for autoplay policy)
+var started=false;
+function startVideo(){
+  if(started)return;
+  started=true;
+  document.getElementById('start-overlay').style.display='none';
+  voz.play().catch(function(){});
+  mus.play().catch(function(){});
+  showScene(0);
+  rafId=requestAnimationFrame(tick);
+}
+document.addEventListener('click',startVideo,{once:true});
+</script>
+
+<!-- START OVERLAY -->
+<div id="start-overlay" style="position:fixed;inset:0;background:#060608;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;cursor:pointer;" onclick="startVideo()">
+  <div style="width:80px;height:80px;border-radius:50%;background:var(--or);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 0 20px rgba(232,84,26,.12),0 0 0 40px rgba(232,84,26,.06);animation:scIn 1s ease both;margin-bottom:24px;">▶</div>
+  <div style="font-family:'Playfair Display',serif;font-size:clamp(18px,3vw,28px);color:#fff;font-weight:700;margin-bottom:8px;">Estructurar Futuro · Propuesta Infibots</div>
+  <div style="font-size:12px;color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase;">Clic para reproducir</div>
+</div>
+
+</body>
+</html>
