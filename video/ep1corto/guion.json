@@ -1,0 +1,13 @@
+[
+ {"s":15.02,"e":15.89,"who":"I","text":"Un día abren WhatsApp..."},
+ {"s":19.78,"e":20.86,"who":"I","text":"Simplemente dice: bloqueado."},
+ {"s":1.90,"e":4.81,"who":"H","text":"¿Por qué WhatsApp está bloqueando tantas cuentas de negocios?"},
+ {"s":7.81,"e":11.51,"who":"I","text":"Bots piratas, herramientas no oficiales... y Meta lo detecta."},
+ {"s":12.09,"e":13.29,"who":"H","text":"¿Y por lo menos avisan antes?"},
+ {"s":13.75,"e":14.33,"who":"I","text":"Casi nunca."},
+ {"s":28.47,"e":31.75,"who":"I","text":"Empezar a migrar a la API de Meta, que es el WhatsApp para empresas oficial."},
+ {"s":32.35,"e":34.87,"who":"I","text":"Con eso, protegemos tu número y lo conectamos a un CRM."},
+ {"s":44.73,"e":46.17,"who":"H","text":"Entonces, si no quieren perder su número..."},
+ {"s":46.84,"e":48.02,"who":"H","text":"ya saben: hagan esto desde hoy..."},
+ {"s":48.59,"e":49.40,"who":"H","text":"antes de que les pase."}
+]

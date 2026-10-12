@@ -1,6 +1,6 @@
 import "@fontsource/montserrat/800.css";
 import "@fontsource/montserrat/900.css";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   AbsoluteFill,
   Audio,
@@ -14,19 +14,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import {
-  BLOQUEO,
-  CARAS,
-  CHIPS,
-  CTA,
-  data,
-  HOOK,
-  NOMBRES,
-  ROJAS,
-  TARJETAS,
-  TOMAS,
-  VERDES,
-} from "./config";
+import type { ConfigReel, Palabra, Tono } from "./tipos";
 
 const W = 1080;
 const H = 1920;
@@ -34,6 +22,13 @@ const VERDE = "#3DFF8A";
 const ROJO = "#FF3B3B";
 const AMARILLO = "#FFE600";
 const FUENTE = "Montserrat, sans-serif";
+
+// Zonas seguras de Reels/TikTok: la interfaz tapa ~250 px arriba y ~420 px abajo.
+const SEGURO_ARRIBA = 270;
+const SUBTITULOS_Y = 1170;
+
+const Cfg = createContext<ConfigReel | null>(null);
+const useCfg = () => useContext(Cfg)!;
 
 const contorno = (px: number): React.CSSProperties => ({
   WebkitTextStroke: `${px}px #000`,
@@ -43,27 +38,33 @@ const contorno = (px: number): React.CSSProperties => ({
 
 const limpiar = (w: string) => w.toLowerCase().replace(/[^\wáéíóúñü]/gi, "");
 
+const fondoDe = (t: Tono) => (t === "rojo" ? ROJO : t === "verde" ? VERDE : "#fff");
+const colorDe = (t: Tono) => (t === "rojo" ? "#fff" : "#000");
+
 /* ---------- Cámara virtual: zooms y sacudidas ---------- */
 const Camara: React.FC = () => {
+  const cfg = useCfg();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
+  const tomas = cfg.tomas;
 
   let i = 0;
-  while (i + 1 < TOMAS.length && TOMAS[i + 1].desde <= t) i++;
-  const toma = TOMAS[i];
-  const previa = TOMAS[Math.max(0, i - 1)];
-  const fin = TOMAS[i + 1]?.desde ?? data.duration;
+  while (i + 1 < tomas.length && tomas[i + 1].desde <= t) i++;
+  const toma = tomas[i];
+  const previa = tomas[Math.max(0, i - 1)];
+  const fin = tomas[i + 1]?.desde ?? cfg.datos.duration;
   const dentro = t - toma.desde;
 
   // Empuje lento dentro de la toma y golpe de zoom en los momentos fuertes.
   const empuje = interpolate(dentro, [0, fin - toma.desde], [0, 0.04], { extrapolateRight: "clamp" });
-  const entrada = toma.golpe
-    ? spring({ frame: frame - Math.round(toma.desde * fps), fps, config: { damping: 14, stiffness: 220 } })
-    : 1;
+  const entrada =
+    toma.golpe && i > 0
+      ? spring({ frame: frame - Math.round(toma.desde * fps), fps, config: { damping: 14, stiffness: 220 } })
+      : 1;
   const z = (toma.golpe ? previa.zoom + (toma.zoom - previa.zoom) * entrada : toma.zoom) + empuje;
 
-  const f = CARAS[toma.foco];
+  const f = cfg.caras[toma.foco];
   const k = Math.min(1, (z - 1) / 0.5) * 0.7;
   const objetivoX = f.x + (W / 2 - f.x) * k;
   const objetivoY = f.y + (700 - f.y) * k * 0.5;
@@ -71,52 +72,64 @@ const Camara: React.FC = () => {
   let ty = Math.min(0, Math.max(H - H * z, objetivoY - f.y * z));
 
   // Sacudida en el bloqueo.
-  const dt = t - BLOQUEO.desde;
-  if (dt >= 0 && dt < 0.45) {
-    const a = 22 * (1 - dt / 0.45);
-    tx = Math.min(0, Math.max(W - W * z, tx + Math.sin(frame * 2.7) * a));
-    ty = Math.min(0, Math.max(H - H * z, ty + Math.cos(frame * 3.1) * a));
+  if (cfg.bloqueo) {
+    const dt = t - cfg.bloqueo.desde;
+    if (dt >= 0 && dt < 0.45) {
+      const a = 22 * (1 - dt / 0.45);
+      tx = Math.min(0, Math.max(W - W * z, tx + Math.sin(frame * 2.7) * a));
+      ty = Math.min(0, Math.max(H - H * z, ty + Math.cos(frame * 3.1) * a));
+    }
   }
 
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <div style={{ width: W, height: H, transformOrigin: "0 0", transform: `translate(${tx}px, ${ty}px) scale(${z})` }}>
-        <OffthreadVideo src={staticFile("ep1/base.mp4")} style={{ width: W, height: H }} />
+        <OffthreadVideo src={staticFile(cfg.video)} style={{ width: W, height: H }} />
       </div>
     </AbsoluteFill>
   );
 };
 
 /* ---------- Subtítulos palabra a palabra ---------- */
-type Palabra = { w: string; s: number; e: number };
-const bloques: Palabra[][] = [];
-for (const l of data.lines) {
-  let actual: Palabra[] = [];
-  l.words.forEach((p, idx) => {
-    actual.push(p);
-    const corte = /[,.?!…:]$/.test(p.w) || actual.length === 3 || idx === l.words.length - 1;
-    if (corte) {
-      bloques.push(actual);
-      actual = [];
+const useBloques = () => {
+  const cfg = useCfg();
+  return useMemo(() => {
+    const bloques: Palabra[][] = [];
+    for (const l of cfg.datos.lines) {
+      let actual: Palabra[] = [];
+      l.words.forEach((p, idx) => {
+        actual.push(p);
+        if (/[,.?!…:]$/.test(p.w) || actual.length === 3 || idx === l.words.length - 1) {
+          bloques.push(actual);
+          actual = [];
+        }
+      });
     }
-  });
-}
+    return bloques;
+  }, [cfg]);
+};
 
 const Subtitulos: React.FC = () => {
+  const cfg = useCfg();
+  const bloques = useBloques();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
-  const idx = bloques.findIndex((b, i) => t >= b[0].s && t < (bloques[i + 1]?.[0].s ?? b[b.length - 1].e + 0.6));
+  // Antes de la primera palabra ya se ve el primer bloque (sin pantalla vacía en el fotograma 0).
+  const idx =
+    t < bloques[0][0].s
+      ? 0
+      : bloques.findIndex((b, i) => t >= b[0].s && t < (bloques[i + 1]?.[0].s ?? b[b.length - 1].e + 0.6));
   if (idx < 0) return null;
   const b = bloques[idx];
   if (t > b[b.length - 1].e + 0.6) return null;
-  const pop = spring({ frame: frame - Math.round(b[0].s * fps), fps, config: { damping: 12, stiffness: 260 } });
+  const pop = idx === 0 ? 1 : spring({ frame: frame - Math.round(b[0].s * fps), fps, config: { damping: 12, stiffness: 260 } });
 
   return (
     <div
       style={{
         position: "absolute",
-        top: 1170,
+        top: SUBTITULOS_Y,
         left: 60,
         right: 60,
         display: "flex",
@@ -129,7 +142,7 @@ const Subtitulos: React.FC = () => {
       {b.map((p, i) => {
         const limpio = limpiar(p.w);
         const activa = t >= p.s && t < p.e + 0.05;
-        const color = ROJAS.includes(limpio) ? ROJO : VERDES.includes(limpio) ? VERDE : activa ? AMARILLO : "#fff";
+        const color = cfg.rojas.includes(limpio) ? ROJO : cfg.verdes.includes(limpio) ? VERDE : activa ? AMARILLO : "#fff";
         const texto = p.w.replace(/\.\.\.|…/g, "").replace(/[,.:]$/, "").toUpperCase();
         return (
           <span
@@ -159,7 +172,8 @@ const Entra: React.FC<{ desde: number; hasta: number; children: React.ReactNode;
   const { fps } = useVideoConfig();
   const t = frame / fps;
   if (t < desde || t > hasta) return null;
-  const s = spring({ frame: frame - Math.round(desde * fps), fps, config: { damping: 11, stiffness: 200 } });
+  // Lo que empieza en 0 se ve ya en el primer fotograma (miniatura y primer instante).
+  const s = desde <= 0 ? 1 : spring({ frame: frame - Math.round(desde * fps), fps, config: { damping: 11, stiffness: 200 } });
   const salida = interpolate(t, [hasta - 0.18, hasta], [1, 0], { extrapolateLeft: "clamp" });
   return (
     <div style={{ position: "absolute", top, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: salida, transform: `scale(${s}) translateY(${(1 - s) * -40}px)` }}>
@@ -189,51 +203,95 @@ const Pastilla: React.FC<{ fondo: string; color?: string; children: React.ReactN
   </div>
 );
 
-const Hook: React.FC = () => (
-  <Entra desde={0} hasta={HOOK.hasta} top={110}>
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-      <Pastilla fondo="#fff" size={54}>{HOOK.linea1}</Pastilla>
-      <Pastilla fondo={ROJO} color="#fff" size={104}>{HOOK.linea2}</Pastilla>
-      <Pastilla fondo="#fff" size={54}>{HOOK.linea3}</Pastilla>
-    </div>
-  </Entra>
-);
+const Hook: React.FC = () => {
+  const { hook } = useCfg();
+  if (!hook) return null;
+  return (
+    <Entra desde={0} hasta={hook.hasta} top={SEGURO_ARRIBA}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+        {hook.lineas.map((l) => (
+          <Pastilla key={l.texto} fondo={fondoDe(l.tono)} color={colorDe(l.tono)} size={l.size}>
+            {l.texto}
+          </Pastilla>
+        ))}
+      </div>
+    </Entra>
+  );
+};
 
-const Nombres: React.FC = () => (
-  <>
-    {NOMBRES.map((n) => (
-      <Entra key={n.texto} desde={n.desde} hasta={n.hasta} top={1020}>
-        <div style={{ width: "100%", boxSizing: "border-box", display: "flex", justifyContent: n.who === "H" ? "flex-start" : "flex-end", padding: "0 50px" }}>
-          <div style={{ background: "rgba(0,0,0,.78)", color: "#fff", fontFamily: FUENTE, fontWeight: 800, fontSize: 38, padding: "12px 24px", borderRadius: 999, borderLeft: `10px solid ${VERDE}` }}>
-            {n.texto}
-          </div>
+// Imita la pantalla real de WhatsApp cuando bloquean un número.
+const Alerta: React.FC = () => {
+  const { alerta } = useCfg();
+  if (!alerta) return null;
+  return (
+    <Entra desde={alerta.desde} hasta={alerta.hasta} top={SEGURO_ARRIBA}>
+      <div
+        style={{
+          width: 980,
+          background: "#111B21",
+          borderRadius: 34,
+          padding: "34px 40px",
+          boxShadow: "0 20px 60px rgba(0,0,0,.6)",
+          border: "3px solid #2A3942",
+          display: "flex",
+          gap: 28,
+          alignItems: "center",
+        }}
+      >
+        <div style={{ width: 110, height: 110, borderRadius: 999, background: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, flexShrink: 0 }}>
+          🚫
         </div>
-      </Entra>
-    ))}
-  </>
-);
+        <div style={{ fontFamily: FUENTE, color: "#E9EDEF" }}>
+          <div style={{ fontWeight: 900, fontSize: 56, lineHeight: 1.08 }}>{alerta.titulo}</div>
+          <div style={{ fontWeight: 800, fontSize: 36, color: "#8696A0", marginTop: 10, lineHeight: 1.2 }}>{alerta.texto}</div>
+        </div>
+      </div>
+    </Entra>
+  );
+};
 
-const Tarjetas: React.FC = () => (
-  <>
-    {TARJETAS.map((c) => (
-      <Entra key={c.texto} desde={c.desde} hasta={c.hasta} top={260}>
-        <Pastilla fondo={c.tono === "rojo" ? ROJO : VERDE} color={c.tono === "rojo" ? "#fff" : "#000"}>
-          {c.texto}
-        </Pastilla>
-      </Entra>
-    ))}
-  </>
-);
-
-const Chips: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const t = frame / fps;
-  const bloqueado = t >= BLOQUEO.desde;
+const Nombres: React.FC = () => {
+  const { nombres = [] } = useCfg();
   return (
     <>
-      {CHIPS.map((c, i) => (
-        <Entra key={c.texto} desde={c.desde} hasta={BLOQUEO.hasta} top={240 + i * 120}>
+      {nombres.map((n) => (
+        <Entra key={n.texto} desde={n.desde} hasta={n.hasta} top={1020}>
+          <div style={{ width: "100%", boxSizing: "border-box", display: "flex", justifyContent: n.who === "H" ? "flex-start" : "flex-end", padding: "0 90px" }}>
+            <div style={{ background: "rgba(0,0,0,.78)", color: "#fff", fontFamily: FUENTE, fontWeight: 800, fontSize: 38, padding: "12px 24px", borderRadius: 999, borderLeft: `10px solid ${VERDE}` }}>
+              {n.texto}
+            </div>
+          </div>
+        </Entra>
+      ))}
+    </>
+  );
+};
+
+const Tarjetas: React.FC = () => {
+  const { tarjetas = [] } = useCfg();
+  return (
+    <>
+      {tarjetas.map((c) => (
+        <Entra key={c.texto} desde={c.desde} hasta={c.hasta} top={SEGURO_ARRIBA}>
+          <Pastilla fondo={fondoDe(c.tono)} color={colorDe(c.tono)}>
+            {c.texto}
+          </Pastilla>
+        </Entra>
+      ))}
+    </>
+  );
+};
+
+const Chips: React.FC = () => {
+  const { chips = [], bloqueo } = useCfg();
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  if (!bloqueo) return null;
+  const bloqueado = frame / fps >= bloqueo.desde;
+  return (
+    <>
+      {chips.map((c, i) => (
+        <Entra key={c.texto} desde={c.desde} hasta={bloqueo.hasta} top={SEGURO_ARRIBA + i * 120}>
           <div style={{ filter: bloqueado ? "grayscale(1) brightness(.7)" : "none", textDecoration: bloqueado ? "line-through" : "none", textDecorationThickness: 8, textDecorationColor: ROJO }}>
             <Pastilla fondo="#fff" size={52}>{c.texto}</Pastilla>
           </div>
@@ -244,11 +302,13 @@ const Chips: React.FC = () => {
 };
 
 const Bloqueo: React.FC = () => {
+  const { bloqueo } = useCfg();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  if (!bloqueo) return null;
   const t = frame / fps;
-  if (t < BLOQUEO.desde || t > BLOQUEO.hasta) return null;
-  const f0 = Math.round(BLOQUEO.desde * fps);
+  if (t < bloqueo.desde || t > bloqueo.hasta) return null;
+  const f0 = Math.round(bloqueo.desde * fps);
   const flash = interpolate(frame - f0, [0, 10], [0.45, 0], { extrapolateRight: "clamp" });
   const s = spring({ frame: frame - f0, fps, config: { damping: 15, stiffness: 260 } });
   return (
@@ -265,15 +325,16 @@ const Bloqueo: React.FC = () => {
 };
 
 const Cta: React.FC = () => {
+  const { cta, datos } = useCfg();
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const latido = 1 + 0.04 * Math.sin((frame / fps) * Math.PI * 3);
   return (
-    <Entra desde={CTA.desde} hasta={data.duration + 1} top={90}>
+    <Entra desde={cta.desde} hasta={datos.duration + 1} top={SEGURO_ARRIBA}>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, transform: `scale(${latido})` }}>
-        <Pastilla fondo="#fff" size={56}>COMENTA 👇</Pastilla>
-        <Pastilla fondo={VERDE} size={104}>{CTA.palabra}</Pastilla>
-        <div style={{ fontFamily: FUENTE, fontWeight: 800, fontSize: 44, color: "#fff", ...contorno(8) }}>{CTA.sub}</div>
+        <Pastilla fondo="#fff" size={56}>{cta.arriba}</Pastilla>
+        <Pastilla fondo={VERDE} size={104}>{cta.palabra}</Pastilla>
+        <div style={{ fontFamily: FUENTE, fontWeight: 800, fontSize: 44, color: "#fff", ...contorno(8) }}>{cta.sub}</div>
       </div>
     </Entra>
   );
@@ -289,14 +350,15 @@ const Progreso: React.FC = () => {
 
 /* ---------- Efectos de sonido ---------- */
 const Sfx: React.FC = () => {
+  const cfg = useCfg();
   const { fps } = useVideoConfig();
   const sonidos: { t: number; f: string; v: number }[] = [
-    ...TOMAS.filter((x) => x.golpe).map((x) => ({ t: x.desde - 0.12, f: "whoosh", v: 0.35 })),
-    ...TARJETAS.map((c) => ({ t: c.desde, f: c.ding ? "ding" : "pop", v: 0.4 })),
-    ...CHIPS.map((c) => ({ t: c.desde, f: "pop", v: 0.45 })),
-    { t: BLOQUEO.desde, f: "impact", v: 0.7 },
-    { t: CTA.desde, f: "ding", v: 0.45 },
-    { t: 0.05, f: "whoosh", v: 0.3 },
+    { t: 0, f: "whoosh", v: 0.3 },
+    ...cfg.tomas.filter((x, i) => x.golpe && i > 0).map((x) => ({ t: x.desde - 0.12, f: "whoosh", v: 0.35 })),
+    ...(cfg.tarjetas ?? []).map((c) => ({ t: c.desde, f: c.ding ? "ding" : "pop", v: 0.4 })),
+    ...(cfg.chips ?? []).map((c) => ({ t: c.desde, f: "pop", v: 0.45 })),
+    ...(cfg.bloqueo ? [{ t: cfg.bloqueo.desde, f: "impact", v: 0.7 }] : []),
+    { t: cfg.cta.desde, f: "ding", v: 0.45 },
   ];
   return (
     <>
@@ -309,26 +371,27 @@ const Sfx: React.FC = () => {
   );
 };
 
-export const Reel: React.FC = () => {
+export const Reel: React.FC<{ cfg: ConfigReel }> = ({ cfg }) => {
   const [handle] = useState(() => delayRender("Cargando fuentes"));
   useEffect(() => {
     Promise.all([document.fonts.load("900 80px Montserrat"), document.fonts.load("800 40px Montserrat")]).then(() => continueRender(handle));
   }, [handle]);
 
   return (
-    <AbsoluteFill style={{ background: "#000" }}>
-      <Camara />
-      <Bloqueo />
-      <Hook />
-      <Nombres />
-      <Tarjetas />
-      <Chips />
-      <Cta />
-      <Subtitulos />
-      <Progreso />
-      <Sfx />
-    </AbsoluteFill>
+    <Cfg.Provider value={cfg}>
+      <AbsoluteFill style={{ background: "#000" }}>
+        <Camara />
+        <Bloqueo />
+        <Hook />
+        <Alerta />
+        <Nombres />
+        <Tarjetas />
+        <Chips />
+        <Cta />
+        <Subtitulos />
+        <Progreso />
+        <Sfx />
+      </AbsoluteFill>
+    </Cfg.Provider>
   );
 };
-
-export const duracionEp1 = data.duration;

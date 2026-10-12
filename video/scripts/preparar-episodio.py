@@ -19,25 +19,24 @@ lineas = json.load(open(guion_path, encoding="utf-8"))
 dur = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", video],
                            capture_output=True, text=True).stdout)
 
-# Tramos a conservar: cada frase con un poco de aire, fusionando huecos cortos.
-tramos = []
+# Tramos a conservar: cada frase con un poco de aire. Las frases pueden ir en otro orden
+# que en el original (para montar cortes); solo se fusionan si siguen hacia delante y casi seguidas.
+tramos, tramo_de = [], []
 for i, l in enumerate(lineas):
     a = max(0.0, l["s"] - PAD_IN)
     b = min(dur, l["e"] + (COLA if i == len(lineas) - 1 else PAD_OUT))
-    if tramos and a - tramos[-1][1] <= MAX_GAP:
+    if tramos and tramos[-1][0] <= a and a - tramos[-1][1] <= MAX_GAP:
         tramos[-1][1] = max(tramos[-1][1], b)
     else:
         tramos.append([a, b])
+    tramo_de.append(len(tramos) - 1)
 
-def remap(t):
-    acc = 0.0
-    for a, b in tramos:
-        if t <= a:
-            return acc
-        if t <= b:
-            return acc + (t - a)
-        acc += b - a
-    return acc
+inicio_tramo = [sum(b - a for a, b in tramos[:k]) for k in range(len(tramos))]
+
+def remap(t, i):
+    """Tiempo t (original) de la frase i -> tiempo en el vídeo editado."""
+    k = tramo_de[i]
+    return inicio_tramo[k] + (t - tramos[k][0])
 
 # Limpieza previa: borra texto incrustado y escala una sola vez con lanczos + nitidez adaptativa.
 limpieza = "".join(
@@ -57,8 +56,8 @@ subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", video, "-filter_complex", "
 
 # Palabras con tiempos repartidos según su longitud dentro de cada frase.
 salida = []
-for l in lineas:
-    s, e = remap(l["s"]), remap(l["e"])
+for i, l in enumerate(lineas):
+    s, e = remap(l["s"], i), remap(l["e"], i)
     palabras = l["text"].split()
     pesos = [len(re.sub(r"[^\wáéíóúñü]", "", p, flags=re.I)) + 2 for p in palabras]
     total, t = sum(pesos), s

@@ -1,19 +1,9 @@
 import data from "./data.json";
-
-// Posición de cada cara en el lienzo 1080x1920 (H = Hernando, I = Infi).
-export const CARAS = {
-  H: { x: 308, y: 495 },
-  I: { x: 820, y: 480 },
-  W: { x: 540, y: 800 }, // plano general
-} as const;
-
-export type Foco = keyof typeof CARAS;
+import { CARAS_PODCAST, ConfigReel, crearCuando, Toma } from "../plantilla/tipos";
 
 // Tomas de cámara virtual. golpe = zoom rápido con whoosh (momento importante).
-export type Toma = { desde: number; zoom: number; foco: Foco; golpe?: boolean };
-
 // Tres niveles: 1.0 general, 1.15 medio, 1.3 golpe. Más de 1.3 se ve borroso (Veo entrega 720p).
-export const TOMAS: Toma[] = [
+const TOMAS: Toma[] = [
   { desde: 0, zoom: 1.15, foco: "H" },
   { desde: 1.0, zoom: 1.0, foco: "W" },
   { desde: 2.55, zoom: 1.3, foco: "H", golpe: true },
@@ -37,41 +27,54 @@ export const TOMAS: Toma[] = [
 ];
 
 // Colores de palabras clave en los subtítulos.
-export const ROJAS = ["bloqueando", "piratas", "casi", "nunca", "bloqueado", "perder"];
-export const VERDES = ["oficial", "api", "protegemos", "crm", "instante", "24", "horas", "ventas", "competitivos", "hoy"];
+const ROJAS = ["bloqueando", "piratas", "casi", "nunca", "bloqueado", "perder"];
+const VERDES = ["oficial", "api", "protegemos", "crm", "instante", "24", "horas", "ventas", "competitivos", "hoy"];
 
-export const HOOK = { hasta: 2.5, linea1: "¿POR QUÉ WHATSAPP ESTÁ", linea2: "BLOQUEANDO", linea3: "NEGOCIOS? 🚫" };
-
-export const NOMBRES = [
-  { who: "H" as const, desde: 0.25, hasta: 2.4, texto: "HERNANDO · Infibots" },
-  { who: "I" as const, desde: 4.1, hasta: 6.0, texto: "INFI · IA de Infibots 🤖" },
-];
-
-// Busca cuándo se dice una palabra (n = ocurrencia).
-export const cuando = (palabra: string, n = 1): number => {
-  let k = 0;
-  for (const l of data.lines)
-    for (const w of l.words)
-      if (w.w.toLowerCase().replace(/[^\wáéíóúñü/]/gi, "") === palabra && ++k === n) return w.s;
-  throw new Error(`Palabra no encontrada: ${palabra}`);
+const HOOK: ConfigReel["hook"] = {
+  hasta: 2.5,
+  lineas: [
+    { texto: "¿POR QUÉ WHATSAPP ESTÁ", tono: "blanco", size: 54 },
+    { texto: "BLOQUEANDO", tono: "rojo", size: 104 },
+    { texto: "NEGOCIOS? 🚫", tono: "blanco", size: 54 },
+  ],
 };
 
-export const TARJETAS = [
-  { desde: cuando("bots"), hasta: 9.9, texto: "🤖 BOTS PIRATAS = RIESGO", tono: "rojo" as const },
-  { desde: cuando("casi"), hasta: 12.9, texto: "⚠️ SIN AVISO PREVIO", tono: "rojo" as const },
-  { desde: cuando("api"), hasta: 26.95, texto: "✅ API OFICIAL DE WHATSAPP", tono: "verde" as const, ding: true },
-  { desde: cuando("protegemos"), hasta: 29.8, texto: "🛡️ NÚMERO PROTEGIDO + CRM", tono: "verde" as const },
-  { desde: cuando("instante"), hasta: 35.3, texto: "⚡ RESPUESTA AL INSTANTE 24/7", tono: "verde" as const },
-  { desde: cuando("ventas"), hasta: 38.1, texto: "📈 MÁS VENTAS", tono: "verde" as const },
+const NOMBRES: ConfigReel["nombres"] = [
+  { who: "H", desde: 0.25, hasta: 2.4, texto: "HERNANDO · Infibots" },
+  { who: "I", desde: 4.1, hasta: 6.0, texto: "INFI · IA de Infibots 🤖" },
 ];
 
-export const CHIPS = [
+const cuando = crearCuando(data);
+
+const TARJETAS: ConfigReel["tarjetas"] = [
+  { desde: cuando("bots"), hasta: 9.9, texto: "🤖 BOTS PIRATAS = RIESGO", tono: "rojo" },
+  { desde: cuando("casi"), hasta: 12.9, texto: "⚠️ SIN AVISO PREVIO", tono: "rojo" },
+  { desde: cuando("api"), hasta: 26.95, texto: "✅ API OFICIAL DE WHATSAPP", tono: "verde", ding: true },
+  { desde: cuando("protegemos"), hasta: 29.8, texto: "🛡️ NÚMERO PROTEGIDO + CRM", tono: "verde" },
+  { desde: cuando("instante"), hasta: 35.3, texto: "⚡ RESPUESTA AL INSTANTE 24/7", tono: "verde" },
+  { desde: cuando("ventas"), hasta: 38.1, texto: "📈 MÁS VENTAS", tono: "verde" },
+];
+
+const CHIPS = [
   { desde: cuando("clientes"), texto: "💬 Clientes" },
   { desde: cuando("cotizaciones"), texto: "📄 Cotizaciones" },
   { desde: cuando("prospectos"), texto: "🎯 Prospectos" },
 ];
 
-export const BLOQUEO = { desde: cuando("bloqueado"), hasta: 19.1 };
-export const CTA = { desde: cuando("ya"), palabra: "WHATSAPP", sub: "👇 y te decimos cómo migrar" };
+const BLOQUEO = { desde: cuando("bloqueado"), hasta: 19.1 };
+const CTA = { desde: cuando("ya"), arriba: "COMENTA 👇", palabra: "WHATSAPP", sub: "👇 y te decimos cómo migrar" };
 
-export { data };
+export const configEp1: ConfigReel = {
+  video: "ep1/base.mp4",
+  datos: data,
+  caras: CARAS_PODCAST,
+  tomas: TOMAS,
+  rojas: ROJAS,
+  verdes: VERDES,
+  hook: HOOK,
+  nombres: NOMBRES,
+  tarjetas: TARJETAS,
+  chips: CHIPS,
+  bloqueo: BLOQUEO,
+  cta: CTA,
+};
