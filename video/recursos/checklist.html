@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>¿Tu número de WhatsApp está en riesgo? · Infibots</title>
+<style>
+@font-face{font-family:M;font-weight:400;src:url(../node_modules/@fontsource/montserrat/files/montserrat-latin-400-normal.woff2)}
+@font-face{font-family:M;font-weight:700;src:url(../node_modules/@fontsource/montserrat/files/montserrat-latin-700-normal.woff2)}
+@font-face{font-family:M;font-weight:800;src:url(../node_modules/@fontsource/montserrat/files/montserrat-latin-800-normal.woff2)}
+@font-face{font-family:M;font-weight:900;src:url(../node_modules/@fontsource/montserrat/files/montserrat-latin-900-normal.woff2)}
+@page{size:A4;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--verde:#3DFF8A;--verde2:#1FAF5A;--oscuro:#0E1A22;--rojo:#FF3B3B;--gris:#5B6770;--borde:#E3E8EB}
+body{position:relative;overflow:hidden;font-family:M,sans-serif;color:var(--oscuro);width:210mm;height:297mm;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+header{background:var(--oscuro);color:#fff;padding:22px 36px 18px;position:relative}
+header .marca{font-weight:900;font-size:13px;letter-spacing:3px;color:var(--verde)}
+header h1{font-weight:900;font-size:30px;line-height:1.1;margin-top:8px}
+header h1 span{color:var(--verde)}
+header p{font-size:12px;color:#B9C4CA;margin-top:7px;line-height:1.4;max-width:640px}
+header .badge{position:absolute;right:36px;top:26px;background:var(--rojo);color:#fff;font-weight:900;font-size:12px;padding:7px 12px;border-radius:999px}
+main{padding:16px 36px 0}
+.inst{font-size:12.5px;font-weight:700;margin-bottom:10px}
+.inst b{color:var(--verde2)}
+ol{list-style:none;counter-reset:n}
+li{counter-increment:n;display:flex;gap:12px;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--borde)}
+li .box{width:20px;height:20px;border:2.5px solid var(--oscuro);border-radius:5px;flex-shrink:0;margin-top:1px}
+li .t{font-weight:800;font-size:13.5px;line-height:1.3}
+li .t::before{content:counter(n) ". ";color:var(--verde2)}
+li .d{font-size:11.2px;color:var(--gris);line-height:1.4;margin-top:2px}
+.puntaje{display:flex;gap:10px;margin:12px 0 0}
+.nivel{flex:1;border-radius:12px;padding:11px 13px;font-size:11.2px;line-height:1.4}
+.nivel b{display:block;font-weight:900;font-size:13px;margin-bottom:3px}
+.bajo{background:#E9FBEF}.medio{background:#FFF6DA}.alto{background:#FFE5E5}
+h2{font-weight:900;font-size:16px;margin:14px 0 7px}
+.hoy{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.hoy div{border:1.5px solid var(--borde);border-radius:12px;padding:10px 12px;font-size:11.2px;line-height:1.4;color:var(--gris)}
+.hoy b{color:var(--oscuro);font-weight:800;font-size:12px;display:block;margin-bottom:2px}
+.cta{margin:14px 36px 0;background:var(--verde);border-radius:16px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.cta .a{font-weight:900;font-size:17px;line-height:1.2}
+.cta .b{font-size:11.5px;margin-top:4px;font-weight:700}
+.cta .boton{background:var(--oscuro);color:#fff;font-weight:900;font-size:13px;padding:11px 16px;border-radius:999px;white-space:nowrap}
+footer{position:absolute;bottom:12px;left:36px;right:36px;font-size:9px;color:#8A959C;line-height:1.4}
+</style>
+</head>
+<body>
+<header>
+  <div class="marca">INFIBOTS · CHECKLIST</div>
+  <div class="badge">2 minutos</div>
+  <h1>¿Tu número de WhatsApp<br><span>está en riesgo de bloqueo?</span></h1>
+  <p>WhatsApp suspende números de negocio, muchas veces sin aviso, cuando detecta herramientas no oficiales o señales de spam. Revisa tu caso antes de que te pase.</p>
+</header>
+<main>
+  <p class="inst">Marca cada frase que se cumpla en tu negocio. <b>Cada marca suma un punto de riesgo.</b></p>
+  <ol>
+    <li><span class="box"></span><div><div class="t">Usas una versión modificada de WhatsApp</div><div class="d">GB WhatsApp, WhatsApp Plus o cualquier app "Pro" que no sea la oficial de Meta.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Envías mensajes masivos con extensiones o programas</div><div class="d">Extensiones de Chrome para WhatsApp Web, "senders" o programas que mandan mensajes en bloque.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Tu chatbot se conecta escaneando un código QR</div><div class="d">Si tu bot funciona sobre WhatsApp Web y no sobre la API oficial, Meta lo puede detectar como no autorizado.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Escribes a personas que no te dieron permiso</div><div class="d">Bases de datos compradas, listas de Excel o contactos que nunca te escribieron primero.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Mandas el mismo mensaje a muchos contactos en poco tiempo</div><div class="d">Copiar y pegar la misma promoción, o listas de difusión enormes, sobre todo con enlaces.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Clientes te bloquean, te reportan o casi nunca responden</div><div class="d">Muchos bloqueos y reportes son una de las señales más fuertes para WhatsApp.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Agregas personas a grupos sin preguntarles</div><div class="d">Los grupos "de clientes" armados sin permiso generan reportes.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Usas un número nuevo que envía mucho desde el primer día</div><div class="d">Un número recién creado con alto volumen de mensajes salientes levanta alertas.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Casi todos tus mensajes son promociones o enlaces</div><div class="d">Poca conversación real y mucho anuncio se parece al comportamiento de spam.</div></div></li>
+    <li><span class="box"></span><div><div class="t">Ya recibiste un aviso o una restricción temporal</div><div class="d">Si WhatsApp ya te limitó una vez, el siguiente paso puede ser la suspensión.</div></div></li>
+  </ol>
+  <div class="puntaje">
+    <div class="nivel bajo"><b>0 – 1 · Riesgo bajo</b>Vas bien. Mantén las buenas prácticas y respalda tus chats.</div>
+    <div class="nivel medio"><b>2 – 3 · Riesgo medio</b>Corrige esos puntos esta semana, antes de que se acumulen.</div>
+    <div class="nivel alto"><b>4 o más · Riesgo alto</b>Tu número podría caer en cualquier momento. Actúa hoy.</div>
+  </div>
+  <h2>Qué hacer hoy</h2>
+  <div class="hoy">
+    <div><b>1. Quita lo no oficial</b>Desinstala versiones modificadas y extensiones de envío masivo.</div>
+    <div><b>2. Pide permiso</b>Escribe solo a quien te contactó o aceptó recibir mensajes, y deja salir fácil.</div>
+    <div><b>3. Respalda tu información</b>Haz copia de seguridad de los chats y guarda tus contactos fuera de WhatsApp (en un CRM o una hoja).</div>
+    <div><b>4. Si automatizas o vendes con volumen</b>Usa la API oficial de WhatsApp (WhatsApp Business Platform de Meta) con un proveedor autorizado.</div>
+  </div>
+</main>
+<div class="cta">
+  <div><div class="a">¿Marcaste 2 o más?</div><div class="b">Te ayudamos a revisar tu caso y a pasar a la API oficial sin perder tu número.</div></div>
+  <div class="boton">Escribe DIAGNÓSTICO 👉 [tu WhatsApp]</div>
+</div>
+<footer>Guía orientativa preparada por Infibots. WhatsApp decide las suspensiones según sus Condiciones del servicio y sus políticas de mensajería para empresas; seguir esta lista reduce el riesgo pero no garantiza que una cuenta no sea bloqueada. Si ya te suspendieron, solicita la revisión desde la propia app de WhatsApp.</footer>
+</body>
+</html>
